@@ -110,6 +110,8 @@ public class RangedBeacon implements Serializable {
                 mFilter = (RssiFilter)cons.newInstance();
             } catch (Exception e) {
                 LogManager.e(TAG, "Could not construct RssiFilterImplClass %s", BeaconManager.getRssiFilterImplClass().getName());
+                // fallback
+                mFilter = new RunningAverageRssiFilter();
             }
         }
         return mFilter;

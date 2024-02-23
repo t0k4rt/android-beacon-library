@@ -3,6 +3,12 @@ import java.util.regex.Matcher
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
+def props = new Properties()
+file("$rootDir/auth.properties").withInputStream { props.load(it) }
+
+if(!props.containsKey("GITLAB_MVN_TOKEN")) {
+    throw new RuntimeException("GITLAB_MVN_TOKEN not set. Check your auth.property file")
+}
 
 task androidSourcesJar(type: Jar) {
     archiveClassifier.set('sources')
@@ -40,13 +46,14 @@ artifacts {
 group = PUBLISH_GROUP_ID
 version = PUBLISH_VERSION
 
+/*
 ext["signing.keyId"] = project.hasProperty('signing.keyId') ? project.getProperty('signing.keyId') : System.getenv('SIGNING_KEY_ID')
 ext["signing.password"] = project.hasProperty('signing.password') ? project.getProperty('signing.password') : System.getenv('SIGNING_PASSWORD')
 ext["signing.secretKeyRingFile"] = project.hasProperty('signing.secretKeyRingFile') ? project.getProperty('signing.secretKeyRingFile') : System.getenv('SIGNING_SECRET_KEY_RING_FILE')
 ext["ossrhUsername"] = project.hasProperty('ossrhUsername') ? project.getProperty('ossrhUsername') : System.getenv('OSSRH_USERNAME')
 ext["ossrhPassword"] = project.hasProperty('ossrhPassword') ? project.getProperty('ossrhPassword') : System.getenv('OSSRH_PASSWORD')
 ext["sonatypeStagingProfileId"] = project.hasProperty('sonatypeStagingProfileId') ? project.getProperty('sonatypeStagingProfileId') : System.getenv('SONATYPE_STAGING_PROFILE_ID')
-
+*/
 
 afterEvaluate {
     publishing {
@@ -102,6 +109,18 @@ afterEvaluate {
         }
         repositories {
             maven {
+                logger.warn(props.getProperty("GITLAB_MVN_TOKEN"))
+                url "https://git.kairosagency.com/api/v4/projects/273/packages/maven"
+                credentials(HttpHeaderCredentials) {
+                    name = "Private-Token"
+                    value = props.getProperty("GITLAB_MVN_TOKEN")
+                }
+                authentication {
+                    header(HttpHeaderAuthentication)
+                }
+            }
+/**
+            maven {
                 name = "sonatype"
                 url = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
 
@@ -110,6 +129,7 @@ afterEvaluate {
                     password ossrhPassword
                 }
             }
+ **/
         }
     }
     //Declare an explicit dependency on ':android-beacon-library:renameAarForRelease' from ':android-beacon-library:publishReleasePublicationToSonatypeRepository' using Task#mustRunAfter.
@@ -118,7 +138,7 @@ afterEvaluate {
     renameAarForRelease.mustRunAfter signReleasePublication
 }
 
-
+/**
 nexusStaging {
     packageGroup = PUBLISH_GROUP_ID
     stagingProfileId = sonatypeStagingProfileId
@@ -129,7 +149,7 @@ nexusStaging {
 signing {
     sign publishing.publications
 }
-
+**/
 
 task release(dependsOn: [ 'clean', 'build', 'renameAarForRelease', 'androidSourcesJar']) {
     doLast {
