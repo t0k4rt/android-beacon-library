@@ -55,7 +55,6 @@ import org.altbeacon.beacon.service.MonitoringStatus;
 import org.altbeacon.beacon.service.RangeState;
 import org.altbeacon.beacon.service.RangedBeacon;
 import org.altbeacon.beacon.service.RegionMonitoringState;
-import org.altbeacon.beacon.service.RunningAverageRssiFilter;
 import org.altbeacon.beacon.service.ScanJobScheduler;
 import org.altbeacon.beacon.service.SettingsData;
 import org.altbeacon.beacon.service.StartRMData;
@@ -1529,9 +1528,9 @@ public class BeaconManager {
     }
 
     /**
-     * Default class for rssi filter/calculation implementation
+     * Set custom class for rssi filter/calculation implementation
      */
-    protected static Class rssiFilterImplClass = RunningAverageRssiFilter.class;
+    protected static Class rssiFilterImplClass = null;
 
     public static void setRssiFilterImplClass(@NonNull Class c) {
         warnIfScannerNotInSameProcess();
